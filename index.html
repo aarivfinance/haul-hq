@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Haul HQ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F3F5F7; --card:#FFFFFF; --card-2:#F7F9FA; --ink:#111827; --muted:#5F6B7A; --faint:#8C96A3; --line:#E1E6EB;
+  --accent:#0E7C7B; --accent-soft:#E2F2F1; --accent-ink:#FFFFFF;
+  --ig:#C13584; --yt:#E02424; --rd:#FF4500; --web:#3355CC;
+  --s-ordered:#6B7486; --s-warehouse:#3355CC; --s-qc:#0E7C7B; --s-shipped:#B26A00; --s-delivered:#2E7D32; --s-issue:#C62B2B;
+  --shadow:0 1px 2px rgba(17,24,39,.05),0 4px 14px rgba(17,24,39,.05);
+  --head:"Outfit","Avenir Next","Segoe UI",sans-serif;
+  --body:"DM Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0F1318; --card:#171C23; --card-2:#1D232B; --ink:#EAEEF3; --muted:#A1ABB8; --faint:#77818E; --line:#2A313B;
+    --accent:#3CC4BF; --accent-soft:#16302F; --accent-ink:#061413;
+    --ig:#E36BB0; --yt:#FF6B6B; --rd:#FF8A57; --web:#8DA5FF;
+    --s-ordered:#9AA3B4; --s-warehouse:#8DA5FF; --s-qc:#3CC4BF; --s-shipped:#F0B24A; --s-delivered:#72D17A; --s-issue:#FF7B7B;
+    --shadow:0 1px 2px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0F1318; --card:#171C23; --card-2:#1D232B; --ink:#EAEEF3; --muted:#A1ABB8; --faint:#77818E; --line:#2A313B;
+  --accent:#3CC4BF; --accent-soft:#16302F; --accent-ink:#061413;
+  --ig:#E36BB0; --yt:#FF6B6B; --rd:#FF8A57; --web:#8DA5FF;
+  --s-ordered:#9AA3B4; --s-warehouse:#8DA5FF; --s-qc:#3CC4BF; --s-shipped:#F0B24A; --s-delivered:#72D17A; --s-issue:#FF7B7B;
+  --shadow:0 1px 2px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.wrap{max-width:1040px;margin:0 auto;padding-inline:16px}
+
+/* top bar */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-block:22px 18px}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{width:34px;height:34px;border-radius:9px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-family:var(--head);font-weight:700;font-size:15px}
+.brand h1{font-family:var(--head);font-weight:700;font-size:22px;margin:0;letter-spacing:-.01em}
+.fx{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 8px 6px 14px;box-shadow:var(--shadow)}
+.fx-rate{font-family:var(--mono);font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.fx-rate b{font-weight:500;color:var(--accent)}
+.fx-asof{font-size:11.5px;color:var(--faint);white-space:nowrap}
+.fx-btn{background:var(--card-2);border:1px solid var(--line);border-radius:999px;color:var(--muted);font:inherit;font-size:12px;padding:3px 10px;cursor:pointer}
+.fx-btn:hover{color:var(--ink)}
+.fx-form{display:flex;gap:6px;align-items:center}
+.fx-form input{width:90px;padding:4px 8px;font-size:13px}
+
+/* tabs */
+.tabs-bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.tabs{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{appearance:none;background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);font-family:var(--head);font-weight:600;font-size:15px;padding:12px 14px 11px;cursor:pointer;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.count{font-family:var(--mono);font-size:11px;font-weight:500;background:var(--card-2);border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:0 7px;line-height:18px}
+.tab[aria-selected="true"] .count{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
+
+main{padding-block:26px 64px}
+.panel-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px 16px;margin-bottom:18px}
+.panel-head h2{font-family:var(--head);font-weight:700;font-size:28px;letter-spacing:-.015em;margin:0;line-height:1.1;text-wrap:balance}
+.panel-head p{margin:4px 0 0;color:var(--muted);font-size:14px}
+h3.sub{font-family:var(--head);font-weight:600;font-size:15px;color:var(--muted);margin:28px 0 12px}
+
+/* link tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.tile{position:relative;display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;text-decoration:none;box-shadow:var(--shadow);transition:border-color .15s,transform .15s;min-width:0}
+.tile:hover{border-color:var(--accent);transform:translateY(-1px)}
+.mono-av{flex:0 0 42px;height:42px;border-radius:11px;display:grid;place-items:center;font-family:var(--head);font-weight:700;font-size:16px;color:#fff;background:var(--c)}
+.tile-body{display:flex;flex-direction:column;min-width:0;gap:1px}
+.tile-name{font-weight:600;font-size:15px;overflow-wrap:anywhere}
+.tile-sub{font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.tile-host{font-family:var(--mono);font-size:11px;color:var(--faint);overflow-wrap:anywhere}
+.tile-arrow{margin-left:auto;color:var(--faint);font-size:15px;align-self:flex-start}
+.tile:hover .tile-arrow{color:var(--accent)}
+.tile-del{position:absolute;top:6px;right:6px;background:var(--card);border:1px solid var(--line);color:var(--faint);border-radius:999px;width:22px;height:22px;font-size:12px;line-height:1;cursor:pointer;display:none}
+.tile-wrap{position:relative}
+.tile-wrap:hover .tile-del,.tile-del:focus-visible{display:block}
+.tile-del:hover{color:var(--s-issue);border-color:var(--s-issue)}
+@media (hover:none){.tile-del{display:block}}
+
+.addlink{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;padding:12px;border:1px dashed var(--line);border-radius:12px}
+.addlink input{flex:1 1 180px}
+
+/* forms */
+input,select,textarea{font:inherit;font-size:14px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px 11px;width:100%;min-width:0}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+textarea{resize:vertical}
+label{display:flex;flex-direction:column;gap:5px;font-size:12.5px;font-weight:500;color:var(--muted)}
+.btn{font-family:var(--body);font-weight:600;font-size:14px;border:1px solid transparent;border-radius:8px;padding:9px 16px;cursor:pointer;background:var(--accent);color:var(--accent-ink);white-space:nowrap}
+.btn:hover{filter:brightness(1.06)}
+.btn.ghost{background:var(--card);color:var(--ink);border-color:var(--line)}
+.btn.small{font-size:13px;padding:6px 11px}
+.btn.danger{background:var(--s-issue);color:#fff}
+
+/* orders */
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow)}
+.stat span{display:block;font-size:12.5px;color:var(--muted)}
+.stat b{font-family:var(--head);font-weight:600;font-size:22px;font-variant-numeric:tabular-nums}
+.stat small{display:block;font-family:var(--mono);font-size:11.5px;color:var(--faint)}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.pill{appearance:none;font:inherit;font-size:13px;font-weight:500;background:var(--card);color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:5px 12px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.pill i{width:8px;height:8px;border-radius:50%;background:var(--c)}
+.pill em{font-style:normal;font-family:var(--mono);font-size:11.5px;color:var(--faint)}
+.pill[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pill[aria-pressed="true"] em{color:var(--bg);opacity:.7}
+
+.formcard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px;box-shadow:var(--shadow)}
+.formcard h3{font-family:var(--head);font-weight:600;font-size:17px;margin:0 0 14px}
+.form-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.span2{grid-column:span 2}
+.full{grid-column:1 / -1}
+.form-actions{grid-column:1 / -1;display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.toolbar input{flex:1 1 220px;width:auto}
+.toolbar select{width:auto}
+
+.orders{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.order{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px 18px;align-items:center;box-shadow:var(--shadow)}
+.order.example{border-style:dashed;box-shadow:none;opacity:.8}
+.o-main{min-width:0;display:flex;flex-direction:column;gap:3px}
+.o-name{font-weight:600;font-size:15px;overflow-wrap:anywhere}
+.o-name a{text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.o-name a:hover{text-decoration-color:var(--accent)}
+.o-meta{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:13px;color:var(--muted)}
+.o-meta .m{font-family:var(--mono);font-size:12px}
+.o-price{text-align:right;font-variant-numeric:tabular-nums}
+.o-price b{display:block;font-family:var(--mono);font-weight:500;font-size:14px}
+.o-price small{font-family:var(--mono);font-size:11.5px;color:var(--faint)}
+.o-actions{display:flex;align-items:center;gap:6px;justify-content:flex-end;flex-wrap:wrap}
+.status{position:relative;display:inline-flex;align-items:center}
+.status::before{content:"";position:absolute;left:10px;width:8px;height:8px;border-radius:50%;background:var(--c);pointer-events:none}
+.status select{width:auto;padding:6px 10px 6px 24px;font-size:13px;font-weight:500;border-radius:999px;background:var(--card-2)}
+.icon-btn{background:none;border:1px solid transparent;border-radius:8px;color:var(--muted);font:inherit;font-size:13px;padding:6px 8px;cursor:pointer}
+.icon-btn:hover{background:var(--card-2);color:var(--ink)}
+.icon-btn.del:hover{color:var(--s-issue)}
+.o-notes{grid-column:1 / -1;margin:4px 0 0;padding-top:8px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.chip{font-size:11.5px;font-weight:600;background:var(--accent-soft);color:var(--accent);border-radius:999px;padding:3px 10px}
+.confirm{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--s-issue)}
+.empty{padding:28px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px}
+.foot{font-size:12.5px;color:var(--faint);margin-top:14px}
+.sync{font-size:12.5px;color:var(--faint);display:flex;align-items:center;gap:6px}
+.sync i{width:7px;height:7px;border-radius:50%;background:var(--s-delivered)}
+
+@media (max-width:760px){
+  .form-grid{grid-template-columns:1fr 1fr}
+  .order{grid-template-columns:minmax(0,1fr) auto}
+  .o-actions{grid-column:1 / -1;justify-content:flex-start}
+  .fx-asof{display:none}
+}
+@media (max-width:420px){.form-grid{grid-template-columns:1fr}.span2{grid-column:auto}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<style>img{max-width:100%}[hidden]{display:none!important}.backup{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><div class="logo">HQ</div><h1>Haul HQ</h1></div>
+    <div class="fx" id="fx">
+      <span class="fx-rate">£1 = ¥<b id="fxShow">8.865</b></span>
+      <span class="fx-asof" id="fxAsOf">Yahoo Finance</span>
+      <button class="fx-btn" id="fxEditBtn" type="button">Edit</button>
+      <form class="fx-form" id="fxForm" hidden>
+        <input id="fxInput" type="number" step="0.001" min="0.001" inputmode="decimal" aria-label="Yuan per pound">
+        <button class="btn small" type="submit">Set</button>
+        <button class="btn ghost small" type="button" id="fxLive">Use live</button>
+      </form>
+    </div>
+  </header>
+</div>
+
+<div class="tabs-bar">
+  <div class="wrap">
+    <nav class="tabs" role="tablist" id="tabs">
+      <button class="tab" role="tab" data-tab="creators" id="tab-creators">Creators <span class="count" id="c-creators">0</span></button>
+      <button class="tab" role="tab" data-tab="stores" id="tab-stores">Seller Stores <span class="count" id="c-stores">0</span></button>
+      <button class="tab" role="tab" data-tab="sheets" id="tab-sheets">Spreadsheet <span class="count" id="c-sheets">0</span></button>
+      <button class="tab" role="tab" data-tab="orders" id="tab-orders">Ordered Items <span class="count" id="c-orders">0</span></button>
+    </nav>
+  </div>
+</div>
+
+<main class="wrap">
+  <section role="tabpanel" data-panel="creators" hidden>
+    <div class="panel-head"><div><h2>Creators</h2><p>People whose finds are worth following.</p></div></div>
+    <div class="tiles" id="tiles-creators"></div>
+    <h3 class="sub">Communities</h3>
+    <div class="tiles" id="tiles-community"></div>
+    <form class="addlink" data-group="creators"><input name="name" placeholder="Creator name" required><input name="url" type="url" placeholder="https://instagram.com/…" required><button class="btn small" type="submit">Add creator</button></form>
+  </section>
+
+  <section role="tabpanel" data-panel="stores" hidden>
+    <div class="panel-head"><div><h2>Seller Stores</h2><p>Yupoo albums and seller sites.</p></div></div>
+    <div class="tiles" id="tiles-stores"></div>
+    <form class="addlink" data-group="stores"><input name="name" placeholder="Seller name" required><input name="url" type="url" placeholder="https://….x.yupoo.com/albums" required><button class="btn small" type="submit">Add store</button></form>
+  </section>
+
+  <section role="tabpanel" data-panel="sheets" hidden>
+    <div class="panel-head"><div><h2>Spreadsheet</h2><p>W2C spreadsheets for finding links.</p></div></div>
+    <div class="tiles" id="tiles-sheets"></div>
+    <form class="addlink" data-group="sheets"><input name="name" placeholder="Spreadsheet name" required><input name="url" type="url" placeholder="https://…" required><button class="btn small" type="submit">Add spreadsheet</button></form>
+  </section>
+
+  <section role="tabpanel" data-panel="orders" hidden>
+    <div class="panel-head">
+      <div><h2>Ordered Items</h2><p>A log of everything you've ordered and received.</p></div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="sync" id="syncMsg"><i></i>Connecting…</span><button class="btn" id="newOrderBtn" type="button">+ Add item</button></div>
+    </div>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="formcard" id="formCard" hidden>
+      <h3 id="formTitle">Add an item</h3>
+      <form id="orderForm" class="form-grid" autocomplete="off">
+        <label class="span2">Item<input id="f-item" required placeholder="Margiela GATs, white/grey"></label>
+        <label>Seller<input id="f-seller" placeholder="MVT"></label>
+        <label>Date<input id="f-date" type="date"></label>
+        <label class="span2">Product link<input id="f-link" type="url" placeholder="https://weidian.com/item…"></label>
+        <label>Size / colour<input id="f-size" placeholder="EU 43"></label>
+        <label>Price (¥)<input id="f-price" type="number" min="0" step="0.01" inputmode="decimal" placeholder="380"></label>
+        <label class="full">Notes<textarea id="f-notes" rows="2" placeholder="Fit, quality, anything worth remembering…"></textarea></label>
+        <div class="form-actions">
+          <button type="button" class="btn ghost" id="cancelEdit">Cancel</button>
+          <button class="btn" type="submit" id="saveBtn">Add item</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="toolbar">
+      <input id="search" type="search" placeholder="Search items, sellers, notes…">
+      <select id="sort" aria-label="Sort">
+        <option value="date-desc">Newest first</option>
+        <option value="date-asc">Oldest first</option>
+        <option value="price-desc">Price, high to low</option>
+        <option value="name">A to Z</option>
+      </select>
+    </div>
+    <ul class="orders" id="orders"></ul>
+    <div class="backup">
+      <button class="btn ghost small" id="exportBtn" type="button">Copy backup</button>
+      <button class="btn ghost small" id="importBtn" type="button">Restore from backup</button>
+    </div>
+    <div id="importBox" hidden style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
+      <textarea id="importText" rows="4" placeholder="Paste a backup here"></textarea>
+      <div style="display:flex;gap:8px"><button class="btn small" id="importGo" type="button">Restore</button><button class="btn ghost small" id="importCancel" type="button">Cancel</button></div>
+    </div>
+    <p class="foot" id="storageNote">Your items are saved in this browser. Use Copy backup to move them to another device.</p>
+  </section>
+</main>
+
+<script>
+const STAGES=[
+  {id:"ordered",label:"Ordered",c:"--s-ordered"},
+  {id:"warehouse",label:"In warehouse",c:"--s-warehouse"},
+  {id:"qc",label:"QC approved",c:"--s-qc"},
+  {id:"shipped",label:"Shipped",c:"--s-shipped"},
+  {id:"delivered",label:"Delivered",c:"--s-delivered"},
+  {id:"issue",label:"Issue / return",c:"--s-issue"}
+];
+const stageOf=id=>STAGES.find(s=>s.id===id)||STAGES[0];
+const PLAT={Instagram:"--ig",YouTube:"--yt",Reddit:"--rd",Yupoo:"--web",Web:"--web",Spreadsheet:"--accent"};
+
+const LINKS={
+  creators:[
+    {name:"OnlyOpponent",sub:"@onlyopponent · Instagram",plat:"Instagram",url:"https://www.instagram.com/onlyopponent/"},
+    {name:"ZayFinds",sub:"@zayfinds · Instagram",plat:"Instagram",url:"https://www.instagram.com/zayfinds/"},
+    {name:"YourMan2Partner",sub:"@your2manpartner · Instagram",plat:"Instagram",url:"https://www.instagram.com/your2manpartner/?g=5"},
+    {name:"Jei",sub:"@JeiFits · YouTube",plat:"YouTube",url:"https://www.youtube.com/@JeiFits"}
+  ],
+  community:[
+    {name:"r/CoutureReps",sub:"CoutureReps subreddit",plat:"Reddit",url:"https://www.reddit.com/r/CoutureReps/"},
+    {name:"r/FashionReps",sub:"FashionReps subreddit",plat:"Reddit",url:"https://www.reddit.com/r/FashionReps/"},
+    {name:"r/CartierReplicaWatches",sub:"Cartier rep watches",plat:"Reddit",url:"https://www.reddit.com/r/CartierReplicaWatches/"}
+  ],
+  stores:[
+    {name:"DragonRep",sub:"Yupoo albums",plat:"Yupoo",url:"https://noghost.x.yupoo.com/albums"},
+    {name:"RYStore",sub:"Yupoo store",plat:"Yupoo",url:"https://original-copy.x.yupoo.com/"},
+    {name:"MVT",sub:"Margiela GATs tracker + links",plat:"Web",url:"https://mvtgats.com/"}
+  ],
+  sheets:[
+    {name:"Tribute Finds",sub:"W2C spreadsheet",plat:"Spreadsheet",url:"https://tributefinds.com/"},
+    {name:"Jei's Finds",sub:"W2C spreadsheet",plat:"Spreadsheet",url:"https://jeisfinds.com/"}
+  ]
+};
+
+const EXAMPLE={id:"example",item:"Maison Margiela GATs, white/grey suede",seller:"MVT",link:"",size:"EU 43",date:"2026-09-20",price:380,notes:"Example row. Add your first item and this disappears.",example:true};
+
+let gbpcny=8.8648, fxDoc={gbpcny:8.8648,asOf:"2026-09-27T10:50:00Z",source:"Yahoo Finance"};
+let orders=[], customLinks=[], filter=null, editingId=null, db=null;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const host=u=>{try{return new URL(u).host.replace(/^www\./,"")}catch(e){return u}};
+const safeUrl=u=>/^https?:\/\//i.test(u||"")?u:"";
+const initials=n=>String(n).replace(/^r\//,"").replace(/[^A-Za-z0-9 ]/g," ").trim().split(/\s+/).map(w=>w[0]).join("").slice(0,2).toUpperCase()||"•";
+const platFor=u=>{const h=host(u);return /instagram/.test(h)?"Instagram":/youtube|youtu\.be/.test(h)?"YouTube":/reddit/.test(h)?"Reddit":/yupoo/.test(h)?"Yupoo":"Web";};
+const newId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+function lsGet(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+
+/* ---------- tabs ---------- */
+const TABS=["creators","stores","sheets","orders"];
+function showTab(t){
+  if(!TABS.includes(t)) t="creators";
+  document.querySelectorAll(".tab").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===t));
+  document.querySelectorAll("[data-panel]").forEach(p=>p.hidden=p.dataset.panel!==t);
+  try{localStorage.setItem("hq-tab",t)}catch(e){}
+  if(location.hash!=="#"+t) history.replaceState(null,"","#"+t);
+}
+$("tabs").addEventListener("click",e=>{const b=e.target.closest(".tab"); if(b) showTab(b.dataset.tab);});
+
+/* ---------- link tiles ---------- */
+function tile(l,custom){
+  const plat=l.plat||platFor(l.url);
+  const a=`<a class="tile" href="${esc(safeUrl(l.url))}" target="_blank" rel="noopener"><span class="mono-av" style="--c:var(${PLAT[plat]||"--web"})">${esc(initials(l.name))}</span><span class="tile-body"><span class="tile-name">${esc(l.name)}</span>${l.sub?`<span class="tile-sub">${esc(l.sub)}</span>`:""}<span class="tile-host">${esc(host(l.url))}</span></span><span class="tile-arrow">↗</span></a>`;
+  return custom?`<div class="tile-wrap">${a}<button class="tile-del" data-dellink="${esc(l.id)}" aria-label="Remove ${esc(l.name)}">✕</button></div>`:a;
+}
+function renderLinks(){
+  const groupFor=g=>g==="creators"?["creators"]:[g];
+  ["creators","community","stores","sheets"].forEach(g=>{
+    const custom=customLinks.filter(l=>l.group===g);
+    $("tiles-"+g).innerHTML=LINKS[g].map(l=>tile(l,false)).join("")+custom.map(l=>tile(l,true)).join("");
+  });
+  const n=g=>LINKS[g].length+customLinks.filter(l=>l.group===g).length;
+  $("c-creators").textContent=n("creators")+n("community");
+  $("c-stores").textContent=n("stores");
+  $("c-sheets").textContent=n("sheets");
+}
+document.querySelectorAll(".addlink").forEach(f=>f.addEventListener("submit",async e=>{
+  e.preventDefault();
+  const url=f.url.value.trim(); if(!safeUrl(url)) return;
+  const l={id:newId(),name:f.name.value.trim(),url,group:f.dataset.group,sub:host(url),created:Date.now()};
+  try{ if(db) await db.collection("links").doc(l.id).set(l); else { customLinks.push(l); lsSet("hq-links",customLinks); renderLinks(); } f.reset(); }catch(err){ fail(err); }
+}));
+
+/* ---------- orders ---------- */
+const money=(n,sym)=>sym+(+n).toFixed(2);
+function renderStats(){
+  const cny=orders.reduce((a,o)=>a+(+o.price||0),0);
+  const n=orders.length;
+  $("stats").innerHTML=
+    `<div class="stat"><span>Items</span><b>${n}</b><small>${n===1?"1 item logged":n+" items logged"}</small></div>`+
+    `<div class="stat"><span>Total cost</span><b>${money(cny/gbpcny,"£")}</b><small>${money(cny,"¥")}</small></div>`;
+  $("c-orders").textContent=n;
+}
+function orderRow(o){
+  const link=safeUrl(o.link);
+  const name=link?`<a href="${esc(link)}" target="_blank" rel="noopener">${esc(o.item)}</a>`:esc(o.item);
+  const meta=[o.seller&&`<span>${esc(o.seller)}</span>`,o.size&&`<span>${esc(o.size)}</span>`,o.date&&`<span class="m">${esc(o.date)}</span>`].filter(Boolean).join("");
+  const has=o.price!=null&&o.price!=="";
+  const price=has?`<b>${money(o.price/gbpcny,"£")}</b><small>${money(o.price,"¥")}</small>`:`<small>No price</small>`;
+  let actions;
+  if(o.example) actions=`<span class="chip">Example</span>`;
+  else if(o._confirm) actions=`<span class="confirm">Remove this item?<button class="btn danger small" data-del="${esc(o.id)}">Remove</button><button class="btn ghost small" data-nodel="${esc(o.id)}">Keep</button></span>`;
+  else actions=`<button class="icon-btn" data-edit="${esc(o.id)}">Edit</button><button class="icon-btn del" data-askdel="${esc(o.id)}">Remove</button>`;
+  return `<li class="order${o.example?" example":""}"><div class="o-main"><span class="o-name">${name}</span><div class="o-meta">${meta}</div></div><div class="o-price">${price}</div><div class="o-actions">${actions}</div>${o.notes?`<p class="o-notes">${esc(o.notes)}</p>`:""}</li>`;
+}
+function renderOrders(){
+  let list;
+  if(!orders.length) list=[EXAMPLE];
+  else{
+    const q=$("search").value.trim().toLowerCase(), sort=$("sort").value;
+    list=orders.filter(o=>!q||[o.item,o.seller,o.size,o.notes].join(" ").toLowerCase().includes(q));
+    list.sort((a,b)=>sort==="date-asc"?String(a.date||"").localeCompare(String(b.date||""))
+      :sort==="price-desc"?(+b.price||0)-(+a.price||0)
+      :sort==="name"?String(a.item||"").localeCompare(String(b.item||""))
+      :String(b.date||"").localeCompare(String(a.date||""))||(b.created||0)-(a.created||0));
+  }
+  $("orders").innerHTML=list.length?list.map(orderRow).join(""):`<li class="empty">No items match your search.</li>`;
+}
+function renderAll(){renderStats();renderOrders();}
+
+async function saveOrder(o){
+  if(db) await db.collection("orders").doc(o.id).set(o);
+  else{const i=orders.findIndex(x=>x.id===o.id); if(i>=0)orders[i]=o; else orders.push(o); lsSet("hq-orders",orders); renderAll();}
+}
+async function patchOrder(id,p){
+  if(db) await db.doc("orders/"+id).update(p);
+  else{Object.assign(orders.find(x=>x.id===id),p); lsSet("hq-orders",orders); renderAll();}
+}
+async function deleteOrder(id){
+  if(db) await db.doc("orders/"+id).delete();
+  else{orders=orders.filter(x=>x.id!==id); lsSet("hq-orders",orders); renderAll();}
+}
+function fail(e){
+  const c=e&&e.code;
+  $("syncMsg").innerHTML="<i style='background:var(--s-issue)'></i>"+(c==="quota_exceeded"?"Storage full. Remove some old items.":c==="invalid_argument"?"View only: you can't edit this list.":"Couldn't save. Try again.");
+}
+
+/* form */
+const F=["item","seller","link","size","date","price","notes"];
+const today=()=>new Date().toISOString().slice(0,10);
+function openForm(o){
+  $("formCard").hidden=false;
+  if(o){F.forEach(k=>$("f-"+k).value=o[k]??""); editingId=o.id; $("formTitle").textContent="Edit item"; $("saveBtn").textContent="Save changes";}
+  else{$("orderForm").reset(); $("f-date").value=today(); editingId=null; $("formTitle").textContent="Add an item"; $("saveBtn").textContent="Add item";}
+  $("formCard").scrollIntoView({behavior:"smooth",block:"start"}); $("f-item").focus({preventScroll:true});
+}
+function closeForm(){$("formCard").hidden=true; editingId=null;}
+$("newOrderBtn").addEventListener("click",()=>openForm(null));
+$("cancelEdit").addEventListener("click",closeForm);
+$("orderForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const v={}; F.forEach(k=>v[k]=$("f-"+k).value.trim());
+  v.price=v.price===""?null:+v.price;
+  const ex=editingId&&orders.find(o=>o.id===editingId);
+  const o={...v,id:editingId||newId(),created:ex?ex.created:Date.now(),updated:Date.now()};
+  $("saveBtn").disabled=true;
+  try{await saveOrder(o); closeForm();}catch(err){fail(err);}
+  $("saveBtn").disabled=false;
+});
+
+document.addEventListener("click",async e=>{
+  const t=e.target.closest("button"); if(!t) return;
+  const d=t.dataset;
+  if(d.edit){const o=orders.find(x=>x.id===d.edit); if(o) openForm(o);}
+  else if(d.askdel){const o=orders.find(x=>x.id===d.askdel); if(o){o._confirm=true; renderOrders();}}
+  else if(d.nodel){const o=orders.find(x=>x.id===d.nodel); if(o){delete o._confirm; renderOrders();}}
+  else if(d.del){try{await deleteOrder(d.del); if(editingId===d.del) closeForm();}catch(err){fail(err);}}
+  else if(d.dellink){try{ if(db) await db.doc("links/"+d.dellink).delete(); else {customLinks=customLinks.filter(l=>l.id!==d.dellink); lsSet("hq-links",customLinks); renderLinks();} }catch(err){fail(err);}}
+});
+$("search").addEventListener("input",renderOrders);
+$("sort").addEventListener("change",renderOrders);
+
+/* ---------- exchange rate ---------- */
+function applyFx(fx){
+  const v=fx&&+fx.gbpcny;
+  if(v>0){gbpcny=v; fxDoc=fx;}
+  $("fxShow").textContent=gbpcny.toFixed(3);
+  let label="Yahoo Finance";
+  if(fxDoc&&fxDoc.asOf){const d=new Date(fxDoc.asOf); label=(fxDoc.source||"")+(isNaN(d)?"":" · "+(String(fxDoc.asOf).length<=10?d.toLocaleDateString("en-GB",{day:"numeric",month:"short"}):d.toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit",timeZone:"Europe/London"})));}
+  $("fxAsOf").textContent=label;
+  renderAll();
+}
+$("fxEditBtn").addEventListener("click",()=>{const f=$("fxForm"); f.hidden=!f.hidden; $("fxEditBtn").textContent=f.hidden?"Edit":"Close"; if(!f.hidden){$("fxInput").value=gbpcny.toFixed(3); $("fxInput").focus();}});
+$("fxForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const v=parseFloat($("fxInput").value); if(!(v>0)) return;
+  const fx={gbpcny:v,asOf:new Date().toISOString(),source:"Set by you"};
+  $("fxForm").hidden=true; $("fxEditBtn").textContent="Edit";
+  if(db){try{await db.doc("settings/fx").set(fx);}catch(err){fail(err);}}
+  else{lsSet("hq-fx",fx); applyFx(fx);}
+});
+
+/* ---------- boot ---------- */
+orders=lsGet("hq-orders",[]); customLinks=lsGet("hq-links",[]);
+renderLinks(); applyFx(lsGet("hq-fx",null));
+showTab((location.hash||"").slice(1)||(()=>{try{return localStorage.getItem("hq-tab")}catch(e){return null}})()||"creators");
+
+$("syncMsg").innerHTML="<i></i>Saved in this browser";
+
+/* live rate: refreshed at most every 12 hours */
+async function fetchFx(){
+  const cached=lsGet("hq-fx-live",null);
+  if(cached&&Date.now()-new Date(cached.fetched).getTime()<12*3600e3){applyFx(cached);return;}
+  const sources=[
+    async()=>{const r=await fetch("https://api.frankfurter.dev/v1/latest?base=GBP&symbols=CNY");const j=await r.json();return {gbpcny:j.rates.CNY,asOf:j.date,source:"ECB"};},
+    async()=>{const r=await fetch("https://open.er-api.com/v6/latest/GBP");const j=await r.json();return {gbpcny:j.rates.CNY,asOf:new Date(j.time_last_update_unix*1000).toISOString(),source:"ExchangeRate-API"};}
+  ];
+  for(const get of sources){
+    try{const fx=await get(); if(fx.gbpcny>0){fx.fetched=new Date().toISOString(); lsSet("hq-fx-live",fx); if(!lsGet("hq-fx",null)) applyFx(fx); return;}}catch(e){}
+  }
+  if(cached) applyFx(cached);
+}
+if(!lsGet("hq-fx",null)) fetchFx();
+$("fxLive").addEventListener("click",()=>{try{localStorage.removeItem("hq-fx");localStorage.removeItem("hq-fx-live")}catch(e){} $("fxForm").hidden=true; $("fxEditBtn").textContent="Edit"; fetchFx();});
+
+/* backup */
+$("exportBtn").addEventListener("click",async()=>{
+  const data=JSON.stringify({orders,links:customLinks,exported:new Date().toISOString()});
+  try{await navigator.clipboard.writeText(data); $("exportBtn").textContent="Copied";}
+  catch(e){$("importBox").hidden=false; $("importText").value=data; $("importText").select(); $("exportBtn").textContent="Select and copy";}
+  setTimeout(()=>$("exportBtn").textContent="Copy backup",2500);
+});
+$("importBtn").addEventListener("click",()=>{$("importBox").hidden=false; $("importText").value=""; $("importText").focus();});
+$("importCancel").addEventListener("click",()=>{$("importBox").hidden=true;});
+$("importGo").addEventListener("click",()=>{
+  try{const d=JSON.parse($("importText").value);
+    if(Array.isArray(d.orders)){orders=d.orders; lsSet("hq-orders",orders);}
+    if(Array.isArray(d.links)){customLinks=d.links; lsSet("hq-links",customLinks);}
+    renderLinks(); renderAll(); $("importBox").hidden=true;
+  }catch(e){$("importText").setCustomValidity("That doesn't look like a Haul HQ backup."); $("importText").reportValidity(); setTimeout(()=>$("importText").setCustomValidity(""),2000);}
+});
+</script>
+
+</body>
+</html>
