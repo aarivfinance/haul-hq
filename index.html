@@ -259,7 +259,21 @@ label{display:flex;flex-direction:column;gap:5px;font-size:12.5px;font-weight:50
       <textarea id="importText" rows="4" placeholder="Paste a backup here"></textarea>
       <div style="display:flex;gap:8px"><button class="btn small" id="importGo" type="button">Restore</button><button class="btn ghost small" id="importCancel" type="button">Cancel</button></div>
     </div>
-    <p class="foot" id="storageNote">Your items are saved in this browser. Use Copy backup to move them to another device.</p>
+    <p class="foot" id="storageNote"></p>
+
+    <div class="formcard" id="cloudCard" style="margin-top:22px">
+      <h3>Cloud save</h3>
+      <p class="foot" style="margin:-6px 0 14px">Saves every change to <code>data.json</code> in a private GitHub repo, with full history, and syncs across your devices. Your token is kept in this browser only.</p>
+      <form id="cloudForm" class="form-grid" autocomplete="off">
+        <label class="span2">Private data repo<input id="ghRepo" placeholder="aarivfinance/haul-hq-data"></label>
+        <label class="span2">GitHub access token<input id="ghToken" type="password" placeholder="github_pat_…" autocomplete="new-password"></label>
+        <div class="form-actions">
+          <button type="button" class="btn ghost" id="ghOff" hidden>Disconnect this browser</button>
+          <button class="btn" type="submit" id="ghConnect">Connect</button>
+        </div>
+      </form>
+      <p class="foot" id="cloudState"></p>
+    </div>
   </section>
 </main>
 
@@ -310,7 +324,8 @@ const initials=n=>String(n).replace(/^r\//,"").replace(/[^A-Za-z0-9 ]/g," ").tri
 const platFor=u=>{const h=host(u);return /instagram/.test(h)?"Instagram":/youtube|youtu\.be/.test(h)?"YouTube":/reddit/.test(h)?"Reddit":/yupoo/.test(h)?"Yupoo":"Web";};
 const newId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 function lsGet(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}}
-function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function lsPut(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function lsSet(k,v){lsPut(k,v); if(k==="hq-orders"||k==="hq-links") scheduleSync();}
 
 /* ---------- tabs ---------- */
 const TABS=["creators","stores","sheets","orders"];
@@ -394,7 +409,7 @@ async function patchOrder(id,p){
 }
 async function deleteOrder(id){
   if(db) await db.doc("orders/"+id).delete();
-  else{orders=orders.filter(x=>x.id!==id); lsSet("hq-orders",orders); renderAll();}
+  else{tomb[id]=Date.now(); lsPut("hq-tomb",tomb); orders=orders.filter(x=>x.id!==id); lsSet("hq-orders",orders); renderAll();}
 }
 function fail(e){
   const c=e&&e.code;
@@ -431,7 +446,7 @@ document.addEventListener("click",async e=>{
   else if(d.askdel){const o=orders.find(x=>x.id===d.askdel); if(o){o._confirm=true; renderOrders();}}
   else if(d.nodel){const o=orders.find(x=>x.id===d.nodel); if(o){delete o._confirm; renderOrders();}}
   else if(d.del){try{await deleteOrder(d.del); if(editingId===d.del) closeForm();}catch(err){fail(err);}}
-  else if(d.dellink){try{ if(db) await db.doc("links/"+d.dellink).delete(); else {customLinks=customLinks.filter(l=>l.id!==d.dellink); lsSet("hq-links",customLinks); renderLinks();} }catch(err){fail(err);}}
+  else if(d.dellink){try{ if(db) await db.doc("links/"+d.dellink).delete(); else {tomb[d.dellink]=Date.now(); lsPut("hq-tomb",tomb); customLinks=customLinks.filter(l=>l.id!==d.dellink); lsSet("hq-links",customLinks); renderLinks();} }catch(err){fail(err);}}
 });
 $("search").addEventListener("input",renderOrders);
 $("sort").addEventListener("change",renderOrders);
@@ -461,7 +476,7 @@ orders=lsGet("hq-orders",[]); customLinks=lsGet("hq-links",[]);
 renderLinks(); applyFx(lsGet("hq-fx",null));
 showTab((location.hash||"").slice(1)||(()=>{try{return localStorage.getItem("hq-tab")}catch(e){return null}})()||"creators");
 
-$("syncMsg").innerHTML="<i></i>Saved in this browser";
+
 
 /* live rate: refreshed at most every 12 hours */
 async function fetchFx(){
@@ -495,6 +510,99 @@ $("importGo").addEventListener("click",()=>{
     renderLinks(); renderAll(); $("importBox").hidden=true;
   }catch(e){$("importText").setCustomValidity("That doesn't look like a Haul HQ backup."); $("importText").reportValidity(); setTimeout(()=>$("importText").setCustomValidity(""),2000);}
 });
+
+/* ---------- GitHub cloud save ---------- */
+let tomb=lsGet("hq-tomb",{}), ghSha=null, syncTimer=null, syncing=false, syncAgain=false, retryTimer=null, lastSaved=null;
+const ghRepo=()=>{try{return localStorage.getItem("hq-gh-repo")||""}catch(e){return ""}};
+const ghToken=()=>{try{return localStorage.getItem("hq-gh-token")||""}catch(e){return ""}};
+const b64e=str=>{const b=new TextEncoder().encode(str);let bin="";for(let i=0;i<b.length;i++)bin+=String.fromCharCode(b[i]);return btoa(bin);};
+const b64d=str=>new TextDecoder().decode(Uint8Array.from(atob(str.replace(/\s/g,"")),c=>c.charCodeAt(0)));
+const stamp=x=>x.updated||x.created||0;
+const clean=o=>{const {_confirm,...r}=o;return r;};
+const byId=(a,b)=>String(a.id).localeCompare(String(b.id));
+const sortObj=o=>Object.fromEntries(Object.entries(o).sort(([a],[b])=>a.localeCompare(b)));
+function mergeList(a,b){
+  const m=new Map();
+  [...a,...b].forEach(x=>{ if(!x||!x.id) return; const c=m.get(x.id); if(!c||stamp(x)>stamp(c)) m.set(x.id,clean(x)); });
+  return [...m.values()].filter(x=>!(tomb[x.id]&&tomb[x.id]>=stamp(x))).sort(byId);
+}
+function ghFetch(path,opts={}){
+  return fetch("https://api.github.com/repos/"+ghRepo()+path,{...opts,cache:"no-store",headers:{Authorization:"Bearer "+ghToken(),Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28",...(opts.body?{"Content-Type":"application/json"}:{})}});
+}
+function setSync(state,detail){
+  const dot=c=>`<i style="background:var(${c})"></i>`;
+  const t=d=>d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});
+  let msg, note;
+  if(state==="off"){msg=dot("--s-shipped")+"Only saved in this browser"; note="Not backed up yet. Connect Cloud save below so nothing can be lost.";}
+  else if(state==="busy"){msg=dot("--faint")+"Saving to GitHub…"; note="";}
+  else if(state==="ok"){lastSaved=new Date(); msg=dot("--s-delivered")+"Saved to GitHub · "+t(lastSaved); note="Backed up to "+ghRepo()+" with full history.";}
+  else{msg=dot("--s-issue")+(detail||"Couldn't reach GitHub"); note="Your changes are safe in this browser and will be sent to GitHub automatically.";}
+  $("syncMsg").innerHTML=msg; $("storageNote").textContent=note;
+  $("cloudState").textContent=state==="ok"?"Connected to "+ghRepo()+".":state==="err"?(detail||""):"";
+}
+function scheduleSync(){ if(!ghToken()) { setSync("off"); return; } clearTimeout(syncTimer); syncTimer=setTimeout(syncNow,1200); }
+async function syncNow(){
+  if(!ghToken()||!ghRepo()) { setSync("off"); return; }
+  if(syncing){ syncAgain=true; return; }
+  syncing=true; clearTimeout(retryTimer); setSync("busy");
+  try{
+    for(let attempt=0;attempt<4;attempt++){
+      const r=await ghFetch("/contents/data.json?ref=HEAD&_="+Date.now());
+      let remote=null;
+      if(r.status===404){ ghSha=null; }
+      else if(!r.ok){ throw r; }
+      else { const j=await r.json(); ghSha=j.sha; remote=JSON.parse(b64d(j.content)); }
+      if(remote){ Object.entries(remote.tomb||{}).forEach(([k,v])=>{ if(!tomb[k]||v>tomb[k]) tomb[k]=v; }); }
+      orders=mergeList(orders,remote?remote.orders||[]:[]);
+      customLinks=mergeList(customLinks,remote?remote.links||[]:[]);
+      tomb=sortObj(tomb);
+      lsPut("hq-orders",orders); lsPut("hq-links",customLinks); lsPut("hq-tomb",tomb);
+      renderLinks(); renderAll();
+      const body={orders,links:customLinks,tomb};
+      if(remote && JSON.stringify({orders:remote.orders,links:remote.links,tomb:remote.tomb})===JSON.stringify(body)){ setSync("ok"); break; }
+      const put=await ghFetch("/contents/data.json",{method:"PUT",body:JSON.stringify({message:"Update Haul HQ ("+orders.length+" items)",content:b64e(JSON.stringify({app:"haul-hq",saved:new Date().toISOString(),...body},null,2)),...(ghSha?{sha:ghSha}:{})})});
+      if(put.ok){ ghSha=(await put.json()).content.sha; setSync("ok"); break; }
+      if(put.status===409||put.status===422) continue;
+      throw put;
+    }
+  }catch(e){
+    const st=e&&e.status;
+    setSync("err",st===401?"GitHub token is invalid or expired":st===403?"Token can't write to this repo":st===404?"Can't find that repo with this token":"Offline, will retry");
+    retryTimer=setTimeout(syncNow,60000);
+  }
+  syncing=false;
+  if(syncAgain){ syncAgain=false; syncNow(); }
+}
+$("ghRepo").value=ghRepo()||"aarivfinance/haul-hq-data";
+if(ghToken()){ $("ghToken").placeholder="Saved in this browser"; $("ghOff").hidden=false; $("ghConnect").textContent="Update"; }
+$("cloudForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const repo=$("ghRepo").value.trim().replace(/^https?:\/\/github\.com\//,"").replace(/\.git$/,"").replace(/\/$/,"");
+  const token=$("ghToken").value.trim()||ghToken();
+  if(!/^[\w.-]+\/[\w.-]+$/.test(repo)){ $("cloudState").textContent="Enter the repo as owner/name, e.g. aarivfinance/haul-hq-data."; return; }
+  if(!token){ $("cloudState").textContent="Paste your access token first."; return; }
+  $("ghConnect").disabled=true; $("cloudState").textContent="Checking…";
+  try{
+    const r=await fetch("https://api.github.com/repos/"+repo,{headers:{Authorization:"Bearer "+token,Accept:"application/vnd.github+json"},cache:"no-store"});
+    if(r.status===401) throw "That token isn't valid. Check it was copied in full.";
+    if(!r.ok) throw "Can't open "+repo+". Check the name, and that the token has access to this repo.";
+    const info=await r.json();
+    if(!info.private) throw repo+" is public, so anyone could read your list. Make it private first.";
+    if(info.permissions&&!info.permissions.push) throw "This token can read but not write. Give it Contents: Read and write.";
+    try{ localStorage.setItem("hq-gh-repo",repo); localStorage.setItem("hq-gh-token",token); }catch(err){}
+    $("ghToken").value=""; $("ghToken").placeholder="Saved in this browser"; $("ghOff").hidden=false; $("ghConnect").textContent="Update";
+    await syncNow();
+  }catch(err){ $("cloudState").textContent=typeof err==="string"?err:"Couldn't reach GitHub. Check your connection."; }
+  $("ghConnect").disabled=false;
+});
+$("ghOff").addEventListener("click",()=>{
+  try{ localStorage.removeItem("hq-gh-token"); }catch(e){}
+  $("ghOff").hidden=true; $("ghConnect").textContent="Connect"; $("ghToken").placeholder="github_pat_…";
+  setSync("off"); $("cloudState").textContent="Disconnected. Your data is still in "+ghRepo()+".";
+});
+window.addEventListener("online",()=>{ if(ghToken()) syncNow(); });
+document.addEventListener("visibilitychange",()=>{ if(ghToken()) { if(document.visibilityState==="visible") syncNow(); else if(syncTimer){ clearTimeout(syncTimer); syncNow(); } } });
+if(ghToken()) syncNow(); else setSync("off");
 </script>
 
 </body>
